@@ -8,8 +8,8 @@ import java.util.Scanner;
 public class AccDetails extends JFrame implements ActionListener{
 
 	JButton back;
-	String pin;
-	AccDetails(String pinnumber){
+	int pin;
+	AccDetails(int pinnumber){
 
 		this.pin = pinnumber;
 

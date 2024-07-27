@@ -1,105 +1,118 @@
 import java.awt.Color;
-import java.util.*;
 import java.awt.Font;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-
+import java.sql.Timestamp;
+import java.util.Date;
+import javax.imageio.ImageIO;
 import javax.swing.*;
 
-public class Withdrawl extends JFrame implements ActionListener{
+public class Withdrawl extends JFrame implements ActionListener {
 
 	private static final long serialVersionUID = 1L;
-	JButton clear;
+	JButton clear, withdraw, back;
 	JTextField amountField;
-	JButton withdrawl;
-	JLabel text;
-	String pin;
-	Withdrawl(String pinNumber) {
-		
+	JLabel text, atmImage;
+	int pin;
+
+	Withdrawl(int pinNumber) {
 		this.pin = pinNumber;
-		text = new JLabel("Enter the amount You want to withdrawl: ");
-		text.setForeground(Color.black);
+
+		// Load and resize the image
+		try {
+			BufferedImage img = ImageIO.read(new File(System.getProperty("user.home") + "/Desktop/atm.jpg"));
+			Image resizedImg = img.getScaledInstance(1500, 970, Image.SCALE_SMOOTH);
+			atmImage = new JLabel(new ImageIcon(resizedImg));
+			atmImage.setBounds(0, 0, 1200, 900);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		// Create and configure the withdrawal label
+		text = new JLabel("Enter the amount You want to withdraw: ");
+		text.setForeground(Color.white);
 		text.setFont(new Font("MV Boli", Font.BOLD, 17));
-		text.setBounds(50,100,400,20);
-		
+		text.setBounds(270, 450, 400, 20);
+
 		amountField = new JTextField();
 		amountField.setFont(new Font("MV Boli", Font.BOLD, 22));
-		amountField.setBounds(430,100,150,30);
-		
-		withdrawl = new JButton("Withdrawl");
-		withdrawl.setBounds(50, 200, 150, 20);
-		withdrawl.setFocusable(false);
-		withdrawl.addActionListener(this);
-		
-		clear = new JButton("Clear");
-		clear.setBounds(250, 200, 150, 20);
-		clear.setFocusable(false);
-		clear.addActionListener(this);
-		
+		amountField.setBounds(270, 475, 350, 30);
+
+		withdraw = new JButton("Withdraw");
+		withdraw.setBounds(500, 530, 120, 30);
+		withdraw.setFocusable(false);
+		withdraw.addActionListener(this);
+
+		back = new JButton("Back");
+		back.setBounds(500, 565, 120, 30);
+		back.setFocusable(false);
+		back.addActionListener(this);
+
 		setLayout(null);
-		setSize(600, 600);
+		setSize(1200, 900);
 		setVisible(true);
 		this.add(text);
 		this.add(amountField);
-		this.add(withdrawl);
-		this.add(clear);
+		this.add(withdraw);
+		this.add(back);
+		this.add(atmImage);
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if(e.getSource() == clear) {
-			amountField.setText(null);
-		}
-		else if(e.getSource() == withdrawl) {
+		if (e.getSource() == back) {
+			this.dispose();
+			new WelcomePage(pin);
+		} else if (e.getSource() == withdraw) {
 			String number = amountField.getText();
-			Date date = new Date();
 			if (number.equals("")) {
-				JOptionPane.showMessageDialog(null, "Please Enter the amount you want to Withdrawl:)");
-			} else { 
+				JOptionPane.showMessageDialog(null, "Please Enter the amount you want to withdraw:)");
+			} else {
 				try {
+					double balance = 0;
 					Conn conn = new Conn();
-					//get the current balance of the account
 					String query1 = "select amount from bank where pin = ?";
-					PreparedStatement ps1 = conn.c.prepareStatement(query1);
-					ps1.setString(1, pin);
-					ResultSet rs = ps1.executeQuery();
-					if(rs.next()) {
-						double balance = rs.getDouble("amount");
-						double amount = Double.parseDouble(number);
-						//check if the amount is greater than the balance
-						if(amount > balance) {
-							JOptionPane.showMessageDialog(null, "Insufficient balance");
-						} else if(amount < balance){
-							amount = balance - amount;
-							//create a new query for the withdrawal
-							String query = "insert into bank values(?,?,?,?)"; //use placeholders for the values
-							//create a PreparedStatement object
-							PreparedStatement ps = conn.c.prepareStatement(query);
-							//set the values for the placeholders
-							ps.setString(1, pin); //the first placeholder is for the pin
-							ps.setDate(2, new java.sql.Date(date.getTime())); //the second placeholder is for the date
-							ps.setString(3, "Withdrawal"); //the third placeholder is for the transaction type
-							ps.setDouble(4, amount); //the fourth placeholder is for the amount
-							//execute the query
-							ps.executeUpdate();
-							//conn.c.commit();
-							JOptionPane.showMessageDialog(null, "Rs "+number+" withdrawl Successfully");
-							this.dispose();
-							new WelcomePage(pin);
-						}
-					} else {
-						JOptionPane.showMessageDialog(null, "Invalid pin number");
+					PreparedStatement pstmt1 = conn.c.prepareStatement(query1);
+					pstmt1.setInt(1, pin);
+					ResultSet rs = pstmt1.executeQuery();
+					if (rs.next()) {
+						balance = rs.getDouble("amount");
 					}
-				}	catch (Exception ae) {
+					double withdrawAmount = Double.parseDouble(number);
+					if (withdrawAmount > balance) {
+						JOptionPane.showMessageDialog(null, "Insufficient balance");
+					} else {
+						double newBalance = balance - withdrawAmount;
+
+						String updateQuery = "update bank set amount = ? where pin = ?";
+						PreparedStatement pstmt2 = conn.c.prepareStatement(updateQuery);
+						pstmt2.setDouble(1, newBalance);
+						pstmt2.setInt(2, pin);
+						pstmt2.executeUpdate();
+
+						String insertQuery = "insert into transactions (pin, date, type, amount) values(?, ?, ?, ?)";
+						PreparedStatement pstmt3 = conn.c.prepareStatement(insertQuery);
+						pstmt3.setInt(1, pin);
+						pstmt3.setTimestamp(2, new Timestamp(new Date().getTime()));
+						pstmt3.setString(3, "Withdraw");
+						pstmt3.setDouble(4, withdrawAmount);
+						pstmt3.executeUpdate();
+
+						JOptionPane.showMessageDialog(null, "Rs " + number + " Withdrawn Successfully");
+						this.dispose();
+						new WelcomePage(pin);
+					}
+				} catch (Exception ae) {
 					System.out.println(ae);
 				}
-				
-				
 			}
 		}
-		
 	}
-	
 }

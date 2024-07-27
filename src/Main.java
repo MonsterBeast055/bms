@@ -8,11 +8,14 @@ public class Main {
 		new LoginPage();
 		
 	//	SignUp2 signUp2 = new SignUp2();
-		
-	//	WelcomePage welcomePage = new WelcomePage("hey");
+	//	new Deposit(1234);
+	//	new Withdrawl(1234);
+	//	new MiniStatement(1234);
+	//	new Balance(1234);
+	//	new PinChange(1234);
+	//	WelcomePage welcomePage = new WelcomePage(1234);
 	//	AccDetails acc = new AccDetails("");
 	}
 
 }
-// in driver option in database in this ide i have downloaded driver but why not working yet
-// copilot answer
+

@@ -1,86 +1,99 @@
-
 import java.awt.Color;
-import java.util.*;
 import java.awt.Font;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-
+import java.sql.Timestamp;
+import java.util.Date;
+import javax.imageio.ImageIO;
 import javax.swing.*;
 
-public class Deposit extends JFrame implements ActionListener{
+public class Deposit extends JFrame implements ActionListener {
 
 	private static final long serialVersionUID = 1L;
-	JButton clear;
+	JLabel atmImage, enterAmountLabel;
 	JTextField amountField;
-	JButton deposit;
-	JLabel text;
-	String pin;
-	Deposit(String pinNumber) {
-		
+	JButton depositButton, backButton;
+	int pin;
+
+	Deposit(int pinNumber) {
 		this.pin = pinNumber;
-		text = new JLabel("Enter the amount You want to deposit: ");
-		text.setForeground(Color.black);
-		text.setFont(new Font("MV Boli", Font.BOLD, 17));
-		text.setBounds(50,100,400,20);
-		
+
+		// Load and resize the image
+		try {
+			BufferedImage img = ImageIO.read(new File(System.getProperty("user.home") + "/Desktop/atm.jpg"));
+			Image resizedImg = img.getScaledInstance(1500, 970, Image.SCALE_SMOOTH);
+			atmImage = new JLabel(new ImageIcon(resizedImg));
+			atmImage.setBounds(0, 0, 1200, 900);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		// Create and configure the enter amount label
+		enterAmountLabel = new JLabel("Enter Amount: ");
+		enterAmountLabel.setForeground(Color.white);
+		enterAmountLabel.setFont(new Font("MV Boli", Font.BOLD, 17));
+		enterAmountLabel.setBounds(270, 450, 400, 20);
+
+		// Create and configure the amount field
 		amountField = new JTextField();
 		amountField.setFont(new Font("MV Boli", Font.BOLD, 22));
-		amountField.setBounds(430,100,150,30);
-		
-		deposit = new JButton("Deposit");
-		deposit.setBounds(50, 200, 150, 20);
-		deposit.setFocusable(false);
-		deposit.addActionListener(this);
-		
-		clear = new JButton("Clear");
-		clear.setBounds(250, 200, 150, 20);
-		clear.setFocusable(false);
-		clear.addActionListener(this);
-		
+		amountField.setBounds(270, 475, 350, 30);
+
+		// Create and configure the deposit button
+		depositButton = new JButton("Deposit");
+		depositButton.setBounds(500, 510, 120, 30);
+		depositButton.setFocusable(false);
+		depositButton.addActionListener(this);
+
+		// Create and configure the back button
+		backButton = new JButton("Back");
+		backButton.setBounds(500, 545, 120, 30);
+		backButton.setFocusable(false);
+		backButton.addActionListener(this);
+
 		setLayout(null);
-		setSize(600, 600);
+		setSize(1200, 900);
 		setVisible(true);
-		this.add(text);
+		this.add(enterAmountLabel);
 		this.add(amountField);
-		this.add(deposit);
-		this.add(clear);
+		this.add(depositButton);
+		this.add(backButton);
+		this.add(atmImage);
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if(e.getSource() == clear) {
-			amountField.setText(null);
-		}
-		else if(e.getSource() == deposit) {
-			String number = amountField.getText();
-			Date date = new Date();
-			if (number.equals("")) {
-				JOptionPane.showMessageDialog(null, "Please Enter the amount you want to deposit:)");
-			} else { 
+		if (e.getSource() == backButton) {
+			this.dispose();
+			new WelcomePage(pin);
+		} else if (e.getSource() == depositButton) {
+			String amount = amountField.getText();
+			if (amount.equals("")) {
+				JOptionPane.showMessageDialog(null, "Please enter the amount to deposit.");
+			} else {
 				try {
-					double balance = 0;
 					Conn conn = new Conn();
-					String query1 = "select amount from bank where pin = '"+pin+"'";
-					ResultSet rs = conn.s.executeQuery(query1);
-					if (rs.next()) {
-						balance = rs.getDouble("amount");
-					}
-					double a = balance + Integer.parseInt(number);
-					
-					String query = "insert into bank values('"+pin+"', '"+date+"', 'Deposit', '"+a+"')";
-					conn.s.executeUpdate(query);
-					JOptionPane.showMessageDialog(null, "Rs "+number+" Deposited Successfully");
+					String query = "insert into transactions(pin, date, type, amount) values(?, ?, ?, ?)";
+					PreparedStatement pstmt = conn.c.prepareStatement(query);
+					pstmt.setInt(1, pin);
+					pstmt.setTimestamp(2, new Timestamp(new Date().getTime()));
+					pstmt.setString(3, "Deposit");
+					pstmt.setDouble(4, Double.parseDouble(amount));
+					pstmt.executeUpdate();
+					JOptionPane.showMessageDialog(null, "Amount deposited successfully.");
 					this.dispose();
 					new WelcomePage(pin);
-				}	catch (Exception ae) {
+				} catch (Exception ae) {
 					System.out.println(ae);
 				}
-				
-				
 			}
 		}
-		
 	}
-	
 }

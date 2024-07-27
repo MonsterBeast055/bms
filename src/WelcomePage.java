@@ -1,82 +1,117 @@
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JLabel;
-import java.awt.Color;
-import java.awt.Font;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import javax.swing.JButton;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
 
-public class WelcomePage implements ActionListener{
+public class WelcomePage implements ActionListener {
 
-	JFrame frame; 
-	JButton logOut;
-	JButton AccountDetails;
-	JButton cashWithdrawl;
-	JButton cashDeposit;
-	JPanel detailsPanel;
-	JLabel bankName;
-	String pin;
-	WelcomePage(String pinNumber){
-		
+	JFrame frame;
+	JLabel atmImage;
+	JLabel transactionLabel;
+	int pin;
+	JButton withdrawButton;
+	JButton depositButton;
+	JButton balanceButton;
+	JButton miniStatementButton;
+	JButton pinChangeButton;
+	JButton exitButton;
+
+	WelcomePage(int pinNumber) {
 		this.pin = pinNumber;
 		frame = new JFrame();
-		logOut = new JButton("Logout");
-		AccountDetails = new JButton("AccountDetails");
-		cashWithdrawl = new JButton("CashWithdrawl");
-		cashDeposit = new JButton("CashDeposit");
-		detailsPanel = new JPanel();
-		bankName = new JLabel("Rozan Bank Ltd.");
-		
-		AccountDetails.setBounds(35, 200, 200, 50);
-		AccountDetails.setFocusable(false);
-		AccountDetails.addActionListener(this);
-		
-		cashWithdrawl.setBounds(235, 200, 200, 50);
-		cashWithdrawl.setFocusable(false);
-		cashWithdrawl.addActionListener(this);
-		
-		cashDeposit.setBounds(435, 200, 150, 50);
-		cashDeposit.setFocusable(false);
-		cashDeposit.addActionListener(this);
-		
-		logOut.setBounds(250,300,100,40);
-		logOut.setFocusable(false);
-		logOut.addActionListener(this);
-		
-		detailsPanel.setBounds(120, 50, 400, 100);
-		detailsPanel.setBackground(Color.WHITE);
-		detailsPanel.setLayout(null);
-		
-		bankName.setBounds(100,20,200,50);
-		bankName.setFont(new Font("MV Boli", Font.BOLD, 20));
-		
+
+		// Load and resize the image
+		try {
+			BufferedImage img = ImageIO.read(new File(System.getProperty("user.home") + "/Desktop/atm.jpg"));
+			Image resizedImg = img.getScaledInstance(1500, 970, Image.SCALE_SMOOTH);
+			atmImage = new JLabel(new ImageIcon(resizedImg));
+			atmImage.setBounds(0, 0, 1200, 900);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		// Create and configure the transaction label
+		transactionLabel = new JLabel("Please select your transaction", SwingConstants.CENTER);
+		transactionLabel.setFont(new Font("MV Boli", Font.BOLD, 24));
+		transactionLabel.setForeground(Color.WHITE); // Set the text color to white
+		transactionLabel.setOpaque(false); // Make the background transparent
+		transactionLabel.setBounds(175, 433, 600, 40);
+
+		// Create and configure the ATM buttons
+		withdrawButton = new JButton("Withdraw");
+		withdrawButton.setFont(new Font("MV Boli", Font.BOLD, 18));
+		withdrawButton.setBounds(565, 500, 127, 30);
+		withdrawButton.addActionListener(this);
+		withdrawButton.setFocusable(false);
+
+		depositButton = new JButton("Deposit");
+		depositButton.setFont(new Font("MV Boli", Font.BOLD, 18));
+		depositButton.setBounds(250, 500, 120, 30);
+		depositButton.addActionListener(this);
+		depositButton.setFocusable(false);
+
+		balanceButton = new JButton("Balance");
+		balanceButton.setFont(new Font("MV Boli", Font.BOLD, 18));
+		balanceButton.setBounds(250, 535, 120, 30);
+		balanceButton.addActionListener(this);
+		balanceButton.setFocusable(false);
+
+		miniStatementButton = new JButton("Mini Statement");
+		miniStatementButton.setFont(new Font("MV Boli", Font.BOLD, 18));
+		miniStatementButton.setBounds(519, 535, 175, 30);
+		miniStatementButton.addActionListener(this);
+		miniStatementButton.setFocusable(false);
+
+		pinChangeButton = new JButton("Pin Change");
+		pinChangeButton.setFont(new Font("MV Boli", Font.BOLD, 18));
+		pinChangeButton.setBounds(250, 570, 150, 30);
+		pinChangeButton.addActionListener(this);
+		pinChangeButton.setFocusable(false);
+
+		exitButton = new JButton("Exit");
+		exitButton.setFont(new Font("MV Boli", Font.BOLD, 18));
+		exitButton.setBounds(565, 570, 120, 30);
+		exitButton.addActionListener(this);
+		exitButton.setFocusable(false);
+
+		// Create a layered pane
+		JLayeredPane layeredPane = new JLayeredPane();
+		layeredPane.setPreferredSize(new Dimension(1200, 900));
+		layeredPane.add(atmImage, JLayeredPane.DEFAULT_LAYER);
+		layeredPane.add(transactionLabel, JLayeredPane.PALETTE_LAYER);
+		layeredPane.add(withdrawButton, JLayeredPane.PALETTE_LAYER);
+		layeredPane.add(depositButton, JLayeredPane.PALETTE_LAYER);
+		layeredPane.add(balanceButton, JLayeredPane.PALETTE_LAYER);
+		layeredPane.add(miniStatementButton, JLayeredPane.PALETTE_LAYER);
+		layeredPane.add(pinChangeButton, JLayeredPane.PALETTE_LAYER);
+		layeredPane.add(exitButton, JLayeredPane.PALETTE_LAYER);
+
+		// Add layered pane to the frame
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setLayout(null);
-		frame.setSize(600,400);
+		frame.setLayout(new BorderLayout());
+		frame.setSize(1200, 900);
+		frame.add(layeredPane, BorderLayout.CENTER);
 		frame.setVisible(true);
-		frame.add(logOut);
-		frame.add(AccountDetails);
-		frame.add(cashWithdrawl);
-		detailsPanel.add(bankName);
-		frame.add(detailsPanel);
-		frame.add(cashDeposit);
-		
 	}
+
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if(e.getSource() == logOut) {
-			frame.dispose();
-		}
-		if(e.getSource() == cashDeposit) {
-			frame.dispose();
-			new Deposit(pin);
-		}
-		if(e.getSource() == cashWithdrawl) {
+		if (e.getSource() == withdrawButton) {
 			new Withdrawl(pin);
-		}
-		if(e.getSource() == AccountDetails) { 
-			new AccDetails(pin);
+		} else if (e.getSource() == depositButton) {
+			new Deposit(pin);
+		} else if (e.getSource() == balanceButton) {
+			new Balance(pin);
+		} else if (e.getSource() == miniStatementButton) {
+			new MiniStatement(pin);
+		} else if (e.getSource() == pinChangeButton) {
+			new PinChange(pin);
+		} else if (e.getSource() == exitButton) {
+			frame.dispose();
 		}
 	}
 }
