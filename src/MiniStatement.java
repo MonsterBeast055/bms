@@ -23,7 +23,7 @@ public class MiniStatement extends JFrame implements ActionListener {
 
         // Load and resize the image
         try {
-            BufferedImage img = ImageIO.read(new File(System.getProperty("user.home") + "/Desktop/atm.jpg"));
+            BufferedImage img = ImageIO.read(new File("/home/kali/Desktop/eclipse-workspace/bankManagementSystem/atm.jpg"));
             Image resizedImg = img.getScaledInstance(1500, 970, Image.SCALE_SMOOTH);
             atmImage = new JLabel(new ImageIcon(resizedImg));
             atmImage.setBounds(0, 0, 1200, 900);
